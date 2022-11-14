@@ -53,7 +53,9 @@ final class OneSignalTransport extends AbstractTransport
 
     public function supports(MessageInterface $message): bool
     {
-        return $message instanceof PushMessage && (null !== $this->defaultRecipientId || ($message->getOptions() instanceof OneSignalOptions && null !== $message->getOptions()->getRecipientId()));
+        return $message instanceof PushMessage && (null !== $this->defaultRecipientId ||
+                ($message->getOptions() instanceof OneSignalOptions && (null !== $message->getOptions()->getRecipientId() ||
+                        (isset($message->getOptions()->toArray()["include_external_user_ids"]) && count($message->getOptions()->toArray()["include_external_user_ids"]) > 0))));
     }
 
     /**
@@ -74,12 +76,12 @@ final class OneSignalTransport extends AbstractTransport
         }
 
         $recipientId = $message->getRecipientId() ?? $this->defaultRecipientId;
+        $options = $opts ? $opts->toArray() : [];
 
-        if (null === $recipientId) {
+        if (null === $recipientId && (!isset($options["include_external_user_ids"]) || count($options["include_external_user_ids"]) === 0)) {
             throw new LogicException(sprintf('The "%s" transport should have configured `defaultRecipientId` via DSN or provided with message options.', __CLASS__));
         }
-
-        $options = $opts ? $opts->toArray() : [];
+        
         $options['app_id'] = $this->appId;
         $options['include_player_ids'] = [$recipientId];
 
