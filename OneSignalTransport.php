@@ -68,7 +68,7 @@ final class OneSignalTransport extends AbstractTransport
 
         $recipientId = $message->getRecipientId() ?? $this->defaultRecipientId;
 
-        if (null === $recipientId) {
+        if (null === $recipientId && (!isset($options["include_external_user_ids"]) || count($options["include_external_user_ids"]) === 0)) {
             throw new LogicException(\sprintf('The "%s" transport should have configured `defaultRecipientId` via DSN or provided with message options.', __CLASS__));
         }
 
